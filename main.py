@@ -15,8 +15,10 @@ class BaseHandler(tornado.web.RequestHandler):
         self.write(template.render(**kwargs))
 
 class MainHandler(BaseHandler):
+    @db_session
     def get(self):
-        self.render("photos.html")
+        photos = select(p for p in Photo)
+        self.render("photos.html", photos=photos)
 
 class LoginHandler(BaseHandler):
     def get(self):
@@ -59,7 +61,8 @@ class UserHomeHandler(BaseHandler):
         user = User.get(username=username)
         if user is None:
             raise tornado.web.HTTPError(404, 'No such user')
-        self.render('photos.html', page_owner=username)
+        photos = select(p for p in Photo if p.user.username == username)
+        self.render('photos.html', page_owner=username, photos=photos)
 
 class UploadHandler(BaseHandler):
     @tornado.web.authenticated
@@ -92,6 +95,7 @@ if __name__ == "__main__":
             (r"/logout", LogoutHandler),
             (r"/user/(\w+)", UserHomeHandler),
             (r"/upload", UploadHandler),
+            (r"/photos/(.*)", tornado.web.StaticFileHandler, {'path': 'photos/'}),
         ],
         cookie_secret='Secret Cookie',
         login_url="/login",
