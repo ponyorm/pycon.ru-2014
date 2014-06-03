@@ -13,10 +13,20 @@ class MainHandler(BaseHandler):
     def get(self):
         self.render("photos.html")
 
+class LoginHandler(BaseHandler):
+    def get(self):
+        self.render('login.html')
+
+class SignupHandler(BaseHandler):
+    def get(self):
+        self.render('signup.html')
+
 if __name__ == "__main__":
     app = tornado.web.Application(
         [
             (r"/", MainHandler),
+            (r"/login", LoginHandler),
+            (r"/signup", SignupHandler),
         ],
         static_path=os.path.join(os.path.dirname(__file__), "static"),
         debug=True
