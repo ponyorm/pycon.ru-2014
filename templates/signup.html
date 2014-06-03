@@ -3,6 +3,9 @@
 {% block content %}
     <h1>Signup</h1>
     <form method="post">
+        {% if error %}
+            <p>{{ error }}</p>
+        {% endif %}
         <dl>
             <dt>
                 Username:
