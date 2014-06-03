@@ -29,7 +29,7 @@ class LoginHandler(BaseHandler):
             self.render('login.html', error='Login and password do not match')
         else:
             self.set_secure_cookie('username', username)
-            self.redirect('/')
+            self.redirect('/user/%s' % username)
 
 class SignupHandler(BaseHandler):
     def get(self):
@@ -45,12 +45,20 @@ class SignupHandler(BaseHandler):
         else:
             User(username=username, password=password)
             self.set_secure_cookie('username', username)
-            self.redirect('/')
+            self.redirect('/user/%s' % username)
 
 class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_all_cookies()
         self.redirect('/')
+
+class UserHomeHandler(BaseHandler):
+    @db_session
+    def get(self, username):
+        user = User.get(username=username)
+        if user is None:
+            raise tornado.web.HTTPError(404, 'No such user')
+        self.render('photos.html', page_owner=username)
 
 if __name__ == "__main__":
     app = tornado.web.Application(
@@ -59,6 +67,7 @@ if __name__ == "__main__":
             (r"/login", LoginHandler),
             (r"/signup", SignupHandler),
             (r"/logout", LogoutHandler),
+            (r"/user/(\w+)", UserHomeHandler),
         ],
         cookie_secret='Secret Cookie',
         login_url="/login",

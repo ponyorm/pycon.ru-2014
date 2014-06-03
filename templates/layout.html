@@ -23,6 +23,13 @@
                 {% endif %}
             </ul>
             <h3 class="text-muted">Share Photos App</h3>
+            {% if page_owner%}
+                {% if page_owner == current_user %}
+                    <h3>My photos</h3>
+                {% else %}
+                    <h3>Photos of {{ page_owner }}</h3>
+                {% endif %}
+            {% endif %}
         </div>
 
         {% block content %}
