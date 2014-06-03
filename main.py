@@ -6,6 +6,9 @@ from jinja2 import Environment, FileSystemLoader
 from sockjs.tornado import SockJSRouter, SockJSConnection
 from entities import *
 
+import logging
+logging.getLogger().setLevel(logging.INFO)
+
 template_env = Environment(loader=FileSystemLoader(searchpath="templates"))
 
 TORNADO_PORT = 8080
