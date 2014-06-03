@@ -15,8 +15,22 @@
         }
     </style>
 
-    <!--<script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>-->
+    <!--
+    <script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+    <script src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-3.0.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    -->
     <script src="/static/js/sockjs-0.3.min.js"></script>
+    <script src="/static/js/knockout-3.1.0.js"></script>
+    <script src="/static/js/jquery-2.1.1.min.js"></script>
+
+    <script type="text/html" id="photo-template">
+        <img class="photo" data-bind="attr: {src: photo_url}">
+        <div class="caption">
+            author: <span class="author" data-bind="text: username"></span>
+        </div>
+        <hr>
+    </script>
 
     <script type="text/javascript">
         var current_user, page_owner;
@@ -30,6 +44,8 @@
         {% else %}
             page_owner = null;
         {% endif %}
+
+        var model;
 
         sock = new SockJS('http://localhost:{{ TORNADO_PORT }}/ws');
 
@@ -45,11 +61,34 @@
 
         sock.onmessage = function (e) {
             console.log('on message', e.data);
+            var data = e.data;
+            if (data.event === 'photo_list') {
+                $.each(data.data, function(i, value) {
+                    var photo = new Photo(value.id, value.photo_url, value.username);
+                    model.photos.push(photo);
+                })
+            }
         };
 
         sock.onclose = function () {
             console.log('on close');
         };
+
+        function Photo(id, photo_url, username) {
+            this.id = id;
+            this.photo_url = photo_url;
+            this.username = username;
+        }
+
+        function Model() {
+            this.photos = ko.observableArray([]);
+        }
+
+        $().ready(function() {
+                model = new Model();
+                ko.applyBindings(model);
+            }
+        )
     </script>
 </head>
 

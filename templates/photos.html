@@ -3,13 +3,7 @@
 {% block content %}
        <div class="row">
             <div class="col-lg-12">
-                {% for p in photos %}
-                    <img class="photo" src="{{ p.photo_url }}">
-                    <div class="caption">
-                        author: <span class="author">{{ p.user.username }}</span>
-                    </div>
-                    <hr>
-                {% endfor %}
+                <div data-bind="template: { name: 'photo-template', foreach: photos }" ></div>
             </div>
         </div>
 {% endblock %}
