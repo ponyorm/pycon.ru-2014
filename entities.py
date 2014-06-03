@@ -23,6 +23,9 @@ class Photo(db.Entity):
     liked = Set("Like")
     comments = Set("Comment")
 
+    def to_json(self):
+        return {'id': self.id, 'photo_url': self.photo_url, 'username': self.user.username}
+
 class Tag(db.Entity):
     name = PrimaryKey(unicode)
     photos = Set(Photo)

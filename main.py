@@ -1,5 +1,6 @@
 import os.path
 from hashlib import md5
+import json
 import tornado.web, tornado.ioloop
 from jinja2 import Environment, FileSystemLoader
 from sockjs.tornado import SockJSRouter, SockJSConnection
@@ -94,8 +95,24 @@ class WSConnection(SockJSConnection):
         print 'on open'
     def on_message(self, message):
         print 'on message', message
+        data = json.loads(message)
+        message_name = data.get('message_name')
+        data = data.get('data')
+        func = getattr(self, 'on_' + message_name)
+        func(data)
     def on_close(self):
         print 'on close'
+    @db_session
+    def on_get_last_photos(self, data):
+        print 'on_get_last_photos'
+        current_user = data.get('current_user', None)
+        page_owner = data.get('page_owner', None)
+        query = select(p for p in Photo)
+        if page_owner:
+            query = query.filter(lambda p: p.user.username == page_owner)
+        photos = query.order_by(desc(Photo.id))[:10]
+        data = [p.to_json() for p in photos]
+        self.send({'event': 'photo_list', 'data': data})
 
 if __name__ == "__main__":
     ws_router = SockJSRouter(WSConnection, '/ws')

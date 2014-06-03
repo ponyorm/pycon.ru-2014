@@ -19,10 +19,28 @@
     <script src="/static/js/sockjs-0.3.min.js"></script>
 
     <script type="text/javascript">
+        var current_user, page_owner;
+        {% if current_user %}
+            current_user = '{{ current_user }}';
+        {% else %}
+            current_user = null;
+        {% endif %}
+        {% if page_owner %}
+            page_owner = '{{ page_owner }}';
+        {% else %}
+            page_owner = null;
+        {% endif %}
+
         sock = new SockJS('http://localhost:{{ TORNADO_PORT }}/ws');
 
         sock.onopen = function () {
             console.log('on open');
+            sock.send(
+                JSON.stringify({
+                    message_name: 'get_last_photos',
+                    data: {current_user: current_user, page_owner: page_owner}
+                })
+            )
         };
 
         sock.onmessage = function (e) {
