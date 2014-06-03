@@ -13,6 +13,9 @@ template_env = Environment(loader=FileSystemLoader(searchpath="templates"))
 
 TORNADO_PORT = 8080
 
+ws_router = None
+connections = set()
+
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("username")
@@ -20,6 +23,8 @@ class BaseHandler(tornado.web.RequestHandler):
         template = template_env.get_template(file_name)
         kwargs.update({'TORNADO_PORT': TORNADO_PORT, 'current_user': self.current_user})
         self.write(template.render(**kwargs))
+    def broadcast(self, msg):
+        ws_router.broadcast(connections, msg)
 
 class MainHandler(BaseHandler):
     @db_session
@@ -90,12 +95,16 @@ class UploadHandler(BaseHandler):
                 f.write(content)
         photo_url = '/%s' % filename
         user = User.get(username=self.current_user)
-        Photo(user=user, filename=filename, photo_url=photo_url)
+        photo = Photo(user=user, filename=filename, photo_url=photo_url)
+        commit()
+        self.broadcast({'event': 'new_photo',
+                        'data': {'id': photo.id, 'photo_url': photo_url, 'username': self.current_user}})
         self.redirect('/')
 
 class WSConnection(SockJSConnection):
     def on_open(self, request):
         print 'on open'
+        connections.add(self)
     def on_message(self, message):
         print 'on message', message
         data = json.loads(message)
@@ -105,6 +114,7 @@ class WSConnection(SockJSConnection):
         func(data)
     def on_close(self):
         print 'on close'
+        connections.discard(self)
     @db_session
     def on_get_last_photos(self, data):
         print 'on_get_last_photos'

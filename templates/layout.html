@@ -67,6 +67,12 @@
                     var photo = new Photo(value.id, value.photo_url, value.username);
                     model.photos.push(photo);
                 })
+            } else if (data.event === 'new_photo') {
+                value = data.data;
+                if (!page_owner || page_owner === value.username) {
+                    photo = new Photo(value.id, value.photo_url, value.username);
+                    model.photos.unshift(photo);
+                }
             }
         };
 
