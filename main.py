@@ -6,8 +6,11 @@ from entities import *
 template_env = Environment(loader=FileSystemLoader(searchpath="templates"))
 
 class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie("username")
     def render(self, file_name, **kwargs):
         template = template_env.get_template(file_name)
+        kwargs.update({'current_user': self.current_user})
         self.write(template.render(**kwargs))
 
 class MainHandler(BaseHandler):
