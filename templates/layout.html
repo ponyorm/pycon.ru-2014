@@ -14,6 +14,25 @@
             font-weight: bold;
         }
     </style>
+
+    <!--<script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>-->
+    <script src="/static/js/sockjs-0.3.min.js"></script>
+
+    <script type="text/javascript">
+        sock = new SockJS('http://localhost:{{ TORNADO_PORT }}/ws');
+
+        sock.onopen = function () {
+            console.log('on open');
+        };
+
+        sock.onmessage = function (e) {
+            console.log('on message', e.data);
+        };
+
+        sock.onclose = function () {
+            console.log('on close');
+        };
+    </script>
 </head>
 
 <body>

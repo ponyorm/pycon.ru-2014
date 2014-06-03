@@ -2,16 +2,19 @@ import os.path
 from hashlib import md5
 import tornado.web, tornado.ioloop
 from jinja2 import Environment, FileSystemLoader
+from sockjs.tornado import SockJSRouter, SockJSConnection
 from entities import *
 
 template_env = Environment(loader=FileSystemLoader(searchpath="templates"))
+
+TORNADO_PORT = 8080
 
 class BaseHandler(tornado.web.RequestHandler):
     def get_current_user(self):
         return self.get_secure_cookie("username")
     def render(self, file_name, **kwargs):
         template = template_env.get_template(file_name)
-        kwargs.update({'current_user': self.current_user})
+        kwargs.update({'TORNADO_PORT': TORNADO_PORT, 'current_user': self.current_user})
         self.write(template.render(**kwargs))
 
 class MainHandler(BaseHandler):
@@ -86,7 +89,16 @@ class UploadHandler(BaseHandler):
         Photo(user=user, filename=filename, photo_url=photo_url)
         self.redirect('/')
 
+class WSConnection(SockJSConnection):
+    def on_open(self, request):
+        print 'on open'
+    def on_message(self, message):
+        print 'on message', message
+    def on_close(self):
+        print 'on close'
+
 if __name__ == "__main__":
+    ws_router = SockJSRouter(WSConnection, '/ws')
     app = tornado.web.Application(
         [
             (r"/", MainHandler),
@@ -96,11 +108,11 @@ if __name__ == "__main__":
             (r"/user/(\w+)", UserHomeHandler),
             (r"/upload", UploadHandler),
             (r"/photos/(.*)", tornado.web.StaticFileHandler, {'path': 'photos/'}),
-        ],
+        ] + ws_router.urls,
         cookie_secret='Secret Cookie',
         login_url="/login",
         static_path=os.path.join(os.path.dirname(__file__), "static"),
         debug=True
     )
-    app.listen(8080)
+    app.listen(TORNADO_PORT)
     tornado.ioloop.IOLoop.instance().start()
