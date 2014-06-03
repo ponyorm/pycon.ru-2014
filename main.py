@@ -47,12 +47,18 @@ class SignupHandler(BaseHandler):
             self.set_secure_cookie('username', username)
             self.redirect('/')
 
+class LogoutHandler(BaseHandler):
+    def get(self):
+        self.clear_all_cookies()
+        self.redirect('/')
+
 if __name__ == "__main__":
     app = tornado.web.Application(
         [
             (r"/", MainHandler),
             (r"/login", LoginHandler),
             (r"/signup", SignupHandler),
+            (r"/logout", LogoutHandler),
         ],
         cookie_secret='Secret Cookie',
         login_url="/login",
