@@ -1,4 +1,5 @@
 import os.path
+from hashlib import md5
 import tornado.web, tornado.ioloop
 from jinja2 import Environment, FileSystemLoader
 from entities import *
@@ -64,6 +65,23 @@ class UploadHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         self.render('upload.html')
+    @tornado.web.authenticated
+    @db_session
+    def post(self):
+        if 'photo_file' not in self.request.files:
+            self.render('upload.html')
+            return
+        photo_file = self.request.files['photo_file'][0]
+        content = photo_file['body']
+        extension = os.path.splitext(photo_file['filename'])[1]
+        filename = "photos/%s%s" % (md5(content).hexdigest(), extension)
+        if not os.path.exists(filename):
+            with open(filename, 'wb') as f:
+                f.write(content)
+        photo_url = '/%s' % filename
+        user = User.get(username=self.current_user)
+        Photo(user=user, filename=filename, photo_url=photo_url)
+        self.redirect('/')
 
 if __name__ == "__main__":
     app = tornado.web.Application(
