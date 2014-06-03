@@ -1,3 +1,4 @@
+import os.path
 import tornado.web, tornado.ioloop
 from jinja2 import Environment, FileSystemLoader
 
@@ -17,6 +18,7 @@ if __name__ == "__main__":
         [
             (r"/", MainHandler),
         ],
+        static_path=os.path.join(os.path.dirname(__file__), "static"),
         debug=True
     )
     app.listen(8080)
