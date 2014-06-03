@@ -60,6 +60,11 @@ class UserHomeHandler(BaseHandler):
             raise tornado.web.HTTPError(404, 'No such user')
         self.render('photos.html', page_owner=username)
 
+class UploadHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        self.render('upload.html')
+
 if __name__ == "__main__":
     app = tornado.web.Application(
         [
@@ -68,6 +73,7 @@ if __name__ == "__main__":
             (r"/signup", SignupHandler),
             (r"/logout", LogoutHandler),
             (r"/user/(\w+)", UserHomeHandler),
+            (r"/upload", UploadHandler),
         ],
         cookie_secret='Secret Cookie',
         login_url="/login",
