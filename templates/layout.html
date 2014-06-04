@@ -13,6 +13,17 @@
         .author {
             font-weight: bold;
         }
+        .like {
+            font-size: 24px;
+            color: red;
+        }
+        .nolike {
+            font-size: 24px;
+            color: grey;
+        }
+        .caption {
+            font-size: 28px;
+        }
     </style>
 
     <!--
@@ -28,6 +39,11 @@
         <img class="photo" data-bind="attr: {src: photo_url}">
         <div class="caption">
             author: <span class="author" data-bind="text: username"></span>
+            likes: <span data-bind="text: likes_count"></span>
+            <span data-bind="visible: $root.current_user, click: toggle_like">
+                <span class="glyphicon glyphicon-heart-empty nolike" data-bind="visible: !liked()"></span>
+                <span class="glyphicon glyphicon-heart like" data-bind="visible: liked"></span>
+            </span>
         </div>
         <hr>
     </script>
@@ -61,33 +77,57 @@
 
         sock.onmessage = function (e) {
             console.log('on message', e.data);
-            var data = e.data;
+            var data = e.data, value, photo;
             if (data.event === 'photo_list') {
                 $.each(data.data, function(i, value) {
-                    var photo = new Photo(value.id, value.photo_url, value.username);
+                    photo = new Photo(value.id, value.photo_url, value.username, value.likes_count, value.liked);
                     model.photos.push(photo);
+                    model.photos_dict[value.id] = photo;
                 })
             } else if (data.event === 'new_photo') {
                 value = data.data;
                 if (!page_owner || page_owner === value.username) {
-                    photo = new Photo(value.id, value.photo_url, value.username);
+                    photo = new Photo(value.id, value.photo_url, value.username, value.likes_count, value.liked);
                     model.photos.unshift(photo);
+                    model.photos_dict[value.id] = photo;
                 }
-            }
+            } else if (data.event === 'like' || data.event === 'unlike') {
+                    value = data.data;
+                    photo = model.photos_dict[value.photo_id];
+                    if (data.event === 'like') {
+                        photo.likes_count(photo.likes_count() + 1);
+                        if (model.current_user === value.username) {
+                            photo.liked(true);
+                        }
+                    } else {
+                        photo.likes_count(photo.likes_count() - 1);
+                        if (model.current_user === value.username) {
+                            photo.liked(false);
+                        }
+                    }
+                }
         };
 
         sock.onclose = function () {
             console.log('on close');
         };
 
-        function Photo(id, photo_url, username) {
+        function Photo(id, photo_url, username, likes_count, liked) {
+            var self = this;
             this.id = id;
             this.photo_url = photo_url;
             this.username = username;
+            this.likes_count = ko.observable(likes_count);
+            this.liked = ko.observable(liked);
+            this.toggle_like = function() {
+                $.post('/like', {photo_id: self.id, username: current_user})
+            }
         }
 
         function Model() {
             this.photos = ko.observableArray([]);
+            this.photos_dict = {};
+            this.current_user = current_user;
         }
 
         $().ready(function() {

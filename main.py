@@ -98,8 +98,26 @@ class UploadHandler(BaseHandler):
         photo = Photo(user=user, filename=filename, photo_url=photo_url)
         commit()
         self.broadcast({'event': 'new_photo',
-                        'data': {'id': photo.id, 'photo_url': photo_url, 'username': self.current_user}})
+                        'data': {'id': photo.id, 'photo_url': photo_url, 'username': self.current_user,
+                                 'likes_count': 0, 'liked': False}})
         self.redirect('/')
+
+class LikeHandler(BaseHandler):
+    @db_session
+    def post(self):
+        if not self.current_user:
+            return
+        user = User.get(username=self.current_user)
+        photo_id = self.get_argument('photo_id')
+        username = self.get_argument('username')
+        photo = Photo[photo_id]
+        like = Like.get(user=user, photo=photo)
+        if like is None:
+            Like(user=user, photo=photo)
+            self.broadcast({'event': 'like', 'data': {'photo_id': photo_id, 'username': username}})
+        else:
+            like.delete()
+            self.broadcast({'event': 'unlike', 'data': {'photo_id': photo_id, 'username': username}})
 
 class WSConnection(SockJSConnection):
     def on_open(self, request):
@@ -124,7 +142,7 @@ class WSConnection(SockJSConnection):
         if page_owner:
             query = query.filter(lambda p: p.user.username == page_owner)
         photos = query.order_by(desc(Photo.id))[:10]
-        data = [p.to_json() for p in photos]
+        data = [p.to_json(current_user) for p in photos]
         self.send({'event': 'photo_list', 'data': data})
 
 if __name__ == "__main__":
@@ -138,6 +156,8 @@ if __name__ == "__main__":
             (r"/user/(\w+)", UserHomeHandler),
             (r"/upload", UploadHandler),
             (r"/photos/(.*)", tornado.web.StaticFileHandler, {'path': 'photos/'}),
+            (r"/fonts/(.*)", tornado.web.StaticFileHandler, {'path': 'static/fonts'}),
+            (r"/like", LikeHandler)
         ] + ws_router.urls,
         cookie_secret='Secret Cookie',
         login_url="/login",
