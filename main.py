@@ -8,6 +8,7 @@ from entities import *
 
 import logging
 logging.getLogger().setLevel(logging.INFO)
+logger = logging.getLogger('example')
 
 template_env = Environment(loader=FileSystemLoader(searchpath="templates"))
 
@@ -165,4 +166,5 @@ if __name__ == "__main__":
         debug=True
     )
     app.listen(TORNADO_PORT)
+    logger.info("application started, go to http://localhost:{port}".format(**{'port': TORNADO_PORT}))
     tornado.ioloop.IOLoop.instance().start()

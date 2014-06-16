@@ -1,0 +1,62 @@
+html {
+    min-height: 100%;
+    position: relative;
+}
+body {
+    margin-bottom: 60px;
+}
+.header {
+    padding-top: 20px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+.header {
+    border-bottom: 1px solid #E5E5E5;
+}
+.header h3 {
+    line-height: 40px;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-bottom: 19px;
+}
+@media screen and (min-width: 768px) {
+    .header, .marketing, .footer {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .header {
+        margin-bottom: 30px;
+    }
+}
+#footer {
+    background-color: #F5F5F5;
+    bottom: 0;
+    height: 60px;
+    position: absolute;
+    width: 100%;
+}
+.container {
+    max-width: 680px;
+    padding: 0 15px;
+    width: auto;
+}
+#footer .container .text-muted {
+    margin: 20px 0;
+}
+.photo {
+     max-width: 100%;
+}
+.author {
+    font-weight: bold;
+}
+.like {
+    font-size: 24px;
+    color: red;
+}
+.nolike {
+    font-size: 24px;
+    color: grey;
+}
+.caption {
+    font-size: 28px;
+}
